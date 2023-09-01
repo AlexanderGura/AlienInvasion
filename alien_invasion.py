@@ -1,10 +1,12 @@
 import sys
 import pygame
 
+from time import sleep
 from settings import Settings
 from ship import Ship
 from bullet import Bullet
 from alien import Alien
+from game_stats import GameStats
 
 class AlienInvasion:
     '''Класс для управления ресурсами и поведением игры.'''
@@ -20,6 +22,8 @@ class AlienInvasion:
         self.settings.screen_width = self.screen.get_rect().width
         self.settings.screen_height = self.screen.get_rect().height
 
+        # Создание экземпляра для хранения игровой статистики.
+        self.stats = GameStats(self)
 
         pygame.display.set_caption("Alien Invasion")
         self.ship = Ship(self.screen, self.settings)
@@ -34,9 +38,12 @@ class AlienInvasion:
         '''Запуск основного цикла игры.'''
         while True:     # Бесконечный цикл анимации
             self._chech_events()
-            self.ship.update()
-            self._update_bullets()
-            self._update_aliens()
+
+            if self.stats.game_active:
+                self.ship.update()
+                self._update_bullets()
+                self._update_aliens()
+                
             self._update_screen()
 
     def _chech_events(self):
@@ -132,11 +139,58 @@ class AlienInvasion:
             if bullet.rect.bottom <= 0:
                 self.bullets.remove(bullet)
 
+        self._check_bullet_alien_collisions()
+
+    def _check_bullet_alien_collisions(self):
+        '''Обработка коллизий снарядов с пришельцами.'''
+        # Удаление снарядов и пришельцев, участвующих в коллизиях.
+        collisions = pygame.sprite.groupcollide(
+            self.bullets, self.aliens, False, True)
+        
+        # Когда кончились пришельцы - создаем новый флот и удаляем снаряды.
+        if not self.aliens:
+            self.bullets.empty()
+            self._create_fleet()
+
+    def _check_aliens_bottom(self):
+        '''Проверяет, добрались ли пришельцы до нижнего края экрана.'''
+        screen_rect = self.screen.get_rect()
+        for alien in self.aliens.sprites():
+            if alien.rect.bottom >= screen_rect.bottom:
+                self._ship_hit()
+                break
+
     def _update_aliens(self):
         '''Проверяет достиг ли флот края экрана, если нет, то 
             обновляет позиции всех пришельцев в флоте.'''
         self._check_fleet_edges()
         self.aliens.update()
+
+        # Проверка коллизий "пришелец - корабль".
+        if pygame.sprite.spritecollideany(self.ship, self.aliens):
+            self._ship_hit()
+
+        # Проверить, добрались ли пришельцы до края экрана.
+        self._check_aliens_bottom()
+
+    def _ship_hit(self):
+        '''Обрабатывает столкновение корабля с пришельцем.'''
+        if self.stats.ship_left > 0:
+            # Уменьшение ship_left
+            self.stats.ship_left -= 1
+
+            # Очистка списков пришельцев и снарядов.
+            self.aliens.empty()
+            self.bullets.empty()
+
+            # Сознание нового флота и размещение корабля в центре.
+            self._create_fleet()
+            self.ship.center_ship()
+
+            # Пауза.
+            sleep(0.5)
+        else:
+            self.game_active = False
 
     def _update_screen(self):
         '''Обновляет изображение на экране и отображает новый.'''
