@@ -6,6 +6,7 @@ from settings import Settings
 from ship import Ship
 from bullet import Bullet
 from alien import Alien
+from button import Button
 from game_stats import GameStats
 
 class AlienInvasion:
@@ -34,10 +35,12 @@ class AlienInvasion:
         self.image = pygame.image.load('images/space.jpg')
         self.screen_rect = self.screen.get_rect()
 
+        self.play_botton = Button(self, "Play")
+
     def run_game(self):
         '''Запуск основного цикла игры.'''
         while True:     # Бесконечный цикл анимации
-            self._chech_events()
+            self._check_events()
 
             if self.stats.game_active:
                 self.ship.update()
@@ -46,7 +49,7 @@ class AlienInvasion:
                 
             self._update_screen()
 
-    def _chech_events(self):
+    def _check_events(self):
         '''Отслеживание нажатий клавиатуры и мыши.'''
         for event in pygame.event.get():    # Цикл игровых событий
             if event.type == pygame.QUIT:
@@ -55,6 +58,14 @@ class AlienInvasion:
                 self._check_keydown_events(event)
             elif event.type == pygame.KEYUP:
                 self._check_keyup_events(event)
+            elif event.type == pygame.MOUSEBUTTONDOWN:
+                mouse_pos = pygame.mouse.get_pos()
+                self._check_play_button(mouse_pos)
+
+    def _check_play_button(self, mouse_pos):
+        '''Запускает новую игру при нажитии кнопки Play.'''
+        if self.play_botton.rect.collidepoint(mouse_pos):
+            self.stats.game_active = True
 
     def _check_keydown_events(self, event):
         '''Реагирует на нажатие клавиш.'''
@@ -190,7 +201,7 @@ class AlienInvasion:
             # Пауза.
             sleep(0.5)
         else:
-            self.game_active = False
+            self.stats.game_active = False
 
     def _update_screen(self):
         '''Обновляет изображение на экране и отображает новый.'''
@@ -201,6 +212,10 @@ class AlienInvasion:
         for bullet in self.bullets.sprites():
             bullet.draw_bullet()
         self.aliens.draw(self.screen)
+
+        # Кнопка Play отображается в том случае, если игра неактива.
+        if not self.stats.game_active:
+            self.play_botton.draw_button()
 
         # Отображение последнего прорисованного экрана.
         pygame.display.flip()
