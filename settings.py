@@ -6,6 +6,10 @@ class Settings():
         # Параметры экрана
         self.bg_color = (100, 200, 20)
 
+        # Параметры кнопок
+        self.button_width = 200
+        self.button_height = 50
+
         # Параметры корабля
         self.ship_limit = 3
 

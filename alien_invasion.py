@@ -37,7 +37,7 @@ class AlienInvasion:
         self.image = pygame.image.load('images/space.jpg')
         self.screen_rect = self.screen.get_rect()
 
-        self.play_botton = Button(self, "Play")
+        self.create_buttons()
 
     def run_game(self):
         '''Запуск основного цикла игры.'''
@@ -51,6 +51,14 @@ class AlienInvasion:
                 
             self._update_screen()
 
+    def create_buttons(self):
+        '''Создает кнопки Play, Settings, Quit.'''
+        x, y = self.screen_rect.center
+        diff = self.settings.button_height
+        self.play_button = Button(self, "Play", x, y - diff)
+        self.settings_button = Button(self, "Settings", x, y)
+        self.quit_button = Button(self, "Quit", x, y + diff)
+
     def _check_events(self):
         '''Отслеживание нажатий клавиатуры и мыши.'''
         for event in pygame.event.get():    # Цикл игровых событий
@@ -63,17 +71,17 @@ class AlienInvasion:
             elif event.type == pygame.MOUSEBUTTONDOWN:
                 mouse_pos = pygame.mouse.get_pos()
                 self._check_play_button(mouse_pos)
+                self._check_setting_button(mouse_pos)
+                self._check_quit_button(mouse_pos)
 
     def _check_play_button(self, mouse_pos):
         '''Запускает новую игру при нажитии кнопки Play.'''
-        button_clicked = self.play_botton.rect.collidepoint(mouse_pos)
+        button_clicked = self.play_button.rect.collidepoint(mouse_pos)
         if button_clicked and not self.stats.game_active:
             # Сброс игровой статистики.
             self.stats.reset_stats()
             self.stats.game_active = True
-            self.sb.prep_score()
-            self.sb.prep_level()
-            self.sb.prep_ships()
+            self.sb.prep_images()
 
             # Сброс игровых настроек.
             self.settings.initialize_dinamic_settings()
@@ -88,6 +96,16 @@ class AlienInvasion:
 
             # Указатель мыши скрывается.
             pygame.mouse.set_visible(False)
+
+    def _check_setting_button(self, mouse_pos):
+        '''Проверяет нажатие клавиши Settings.'''
+        if self.settings_button.rect.collidepoint(mouse_pos):
+            print('lol')
+
+    def _check_quit_button(self, mouse_pos):
+        '''Проверяет нажатие клавиши Quit.'''
+        if self.quit_button.rect.collidepoint(mouse_pos):
+            sys.exit()
 
     def _check_keydown_events(self, event):
         '''Реагирует на нажатие клавиш.'''
@@ -183,19 +201,22 @@ class AlienInvasion:
         
         # Когда кончились пришельцы - создаем новый флот и удаляем снаряды.
         if not self.aliens:
-            self.bullets.empty()
-            self._create_fleet()
-            self.settings.increase_speed()
-
-            # Увеличение уровня. 
-            self.stats.level += 1
-            self.sb.prep_level()
+            self.start_new_level()
 
         if collisions:
             for aliens in collisions.values():
                 self.stats.score += self.settings.alien_points * len(aliens)
             self.sb.prep_score()
             self.sb.check_high_score()
+
+    def start_new_level(self):
+        self.bullets.empty()
+        self._create_fleet()
+        self.settings.increase_speed()
+
+        # Увеличение уровня. 
+        self.stats.level += 1
+        self.sb.prep_level()
 
     def _check_aliens_bottom(self):
         '''Проверяет, добрались ли пришельцы до нижнего края экрана.'''
@@ -252,7 +273,9 @@ class AlienInvasion:
 
         # Кнопка Play отображается в том случае, если игра неактива.
         if not self.stats.game_active:
-            self.play_botton.draw_button()
+            self.play_button.draw_button()
+            self.settings_button.draw_button()
+            self.quit_button.draw_button()
 
         # Отображение последнего прорисованного экрана.
         pygame.display.flip()
