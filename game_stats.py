@@ -10,4 +10,6 @@ class GameStats():
         self.game_active = False
 
     def reset_stats(self):
+        '''Инициализирует настройки, изменяющиеся в ходе игры.'''
         self.ship_left = self.settings.ship_limit
+        self.score = 0
