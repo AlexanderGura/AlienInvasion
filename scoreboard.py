@@ -1,10 +1,14 @@
 import pygame.font
+from pygame.sprite import Sprite
+
+from ship import Ship
 
 class Scoreboard():
     '''Класс для вывода игровой информации.'''
 
     def __init__(self, ai_game):
         '''Инициализирует атрибуты подсчёта очков.'''
+        self.ai_game = ai_game
         self.screen = ai_game.screen
         self.screen_rect = ai_game.screen.get_rect()
         self.settings = ai_game.settings
@@ -17,6 +21,8 @@ class Scoreboard():
         # Подготовка изображений счётов.
         self.prep_score()
         self.prep_high_score()
+        self.prep_level()
+        self.prep_ships()
 
     def prep_score(self):
         '''Преобразует текущий счёт в графическое изображение.'''
@@ -40,6 +46,25 @@ class Scoreboard():
         self.high_score_rect.centerx = self.screen_rect.centerx
         self.high_score_rect.top = self.screen_rect.top + 20
 
+    def prep_level(self):
+        '''Преобразует текущий счёт в графическое изображение.'''
+        level_str = str(self.stats.level)
+        self.level_image = self.font.render(level_str, True,
+            self.font_color, None)
+
+        self.level_rect = self.level_image.get_rect()
+        self.level_rect.right = self.score_rect.right
+        self.level_rect.top = self.score_rect.bottom + 10
+
+    def prep_ships(self):
+        '''Сообщает количество оставшихся кораблей.'''
+        self.ships = pygame.sprite.Group()
+        for ship_number in range(self.stats.ship_left):
+            ship = Ship(self.ai_game.screen, self.ai_game.settings)
+            ship.rect.x = 10 + ship_number * ship.rect.width
+            ship.rect.y = 10
+            self.ships.add(ship)
+
     def check_high_score(self):
         '''Проверяет появился ли новый рекорд.'''
         if self.stats.score > self.stats.high_score:
@@ -50,3 +75,5 @@ class Scoreboard():
         '''Выводит счёт на экран.'''
         self.screen.blit(self.score_image, self.score_rect)
         self.screen.blit(self.high_score_image, self.high_score_rect)
+        self.screen.blit(self.level_image, self.level_rect)
+        self.ships.draw(self.screen)
