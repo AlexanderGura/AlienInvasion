@@ -71,6 +71,7 @@ class AlienInvasion:
             # Сброс игровой статистики.
             self.stats.reset_stats()
             self.stats.game_active = True
+            self.sb.prep_score()
 
             # Сброс игровых настроек.
             self.settings.initialize_dinamic_settings()
@@ -174,6 +175,7 @@ class AlienInvasion:
     def _check_bullet_alien_collisions(self):
         '''Обработка коллизий снарядов с пришельцами.'''
         # Удаление снарядов и пришельцев, участвующих в коллизиях.
+        # collisions - словарь, где ключ - bullet, а значение - aliens
         collisions = pygame.sprite.groupcollide(
             self.bullets, self.aliens, False, True)
         
@@ -182,6 +184,12 @@ class AlienInvasion:
             self.bullets.empty()
             self._create_fleet()
             self.settings.increase_speed()
+
+        if collisions:
+            for aliens in collisions.values():
+                self.stats.score += self.settings.alien_points * len(aliens)
+            self.sb.prep_score()
+            self.sb.check_high_score()
 
     def _check_aliens_bottom(self):
         '''Проверяет, добрались ли пришельцы до нижнего края экрана.'''
