@@ -34,7 +34,8 @@ class AlienInvasion:
         self.aliens = pygame.sprite.Group()
         self._create_fleet()
 
-        self.image = pygame.image.load('images/space.jpg')
+        self.menu_image = pygame.image.load('images/menu.jpg')
+        self.game_image = pygame.image.load('images/space.jpg')
         self.screen_rect = self.screen.get_rect()
 
         self.create_buttons()
@@ -54,7 +55,7 @@ class AlienInvasion:
     def create_buttons(self):
         '''Создает кнопки Play, Settings, Quit.'''
         x, y = self.screen_rect.center
-        diff = self.settings.button_height
+        diff = self.settings.button_height * 2
         self.play_button = Button(self, "Play", x, y - diff)
         self.settings_button = Button(self, "Settings", x, y)
         self.quit_button = Button(self, "Quit", x, y + diff)
@@ -197,7 +198,7 @@ class AlienInvasion:
         # Удаление снарядов и пришельцев, участвующих в коллизиях.
         # collisions - словарь, где ключ - bullet, а значение - aliens
         collisions = pygame.sprite.groupcollide(
-            self.bullets, self.aliens, False, True)
+            self.bullets, self.aliens, True, True)
         
         # Когда кончились пришельцы - создаем новый флот и удаляем снаряды.
         if not self.aliens:
@@ -262,17 +263,19 @@ class AlienInvasion:
 
     def _update_screen(self):
         '''Обновляет изображение на экране и отображает новый.'''
-        self.screen.blit(self.image, self.screen_rect)
-        self.ship.blitme()
+        if self.stats.game_active:
+            self.screen.blit(self.game_image, self.screen_rect)
+            self.ship.blitme()
 
-        # Перебираем список всех спрайтов(пуль) и рисуем их на экране.
-        for bullet in self.bullets.sprites():
-            bullet.draw_bullet()
-        self.aliens.draw(self.screen)
-        self.sb.show_score()
+            # Перебираем список всех спрайтов(пуль) и рисуем их на экране.
+            for bullet in self.bullets.sprites():
+                bullet.draw_bullet()
+            self.aliens.draw(self.screen)
+            self.sb.show_score()
 
         # Кнопка Play отображается в том случае, если игра неактива.
         if not self.stats.game_active:
+            self.screen.blit(self.menu_image, self.screen_rect)
             self.play_button.draw_button()
             self.settings_button.draw_button()
             self.quit_button.draw_button()

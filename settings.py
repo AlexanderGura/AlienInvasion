@@ -7,7 +7,7 @@ class Settings():
         self.bg_color = (100, 200, 20)
 
         # Параметры кнопок
-        self.button_width = 200
+        self.button_width = 100
         self.button_height = 50
 
         # Параметры корабля
@@ -23,7 +23,7 @@ class Settings():
         self.bullet_color = (255, 0, 0)
 
         # Темп ускорения игры.
-        self.speedup_scale = 1.1
+        self.speedup_scale = 1.05
         # Темп роста стоймости пришельцев.
         self.score_scale = 1.5
 
@@ -33,7 +33,7 @@ class Settings():
         '''Инициализирует настройки, изменяющиеся в ходе игры.'''
         self.ship_speed_factor = 1.5
         self.bullet_speed_factor = 1.5
-        self.alien_speed_factor = 3.0
+        self.alien_speed_factor = 1.5
         self.fleet_direction = 1    # 1 - движение вправо, -1 влево
 
         # Подсчёт очков

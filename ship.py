@@ -12,7 +12,7 @@ class Ship(Sprite):
         self.settings = settings
 
         # Загружает изображение корабля и получает прямоугольник.
-        self.image = pygame.image.load('images/ship.bmp')
+        self.image = pygame.image.load('images/ship.png')
         self.rect = self.image.get_rect()
 
         # Каждый новый корабль появляется у нижнего края экрана.
