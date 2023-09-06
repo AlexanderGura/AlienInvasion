@@ -7,8 +7,8 @@ class Settings():
         self.bg_color = (100, 200, 20)
 
         # Параметры кнопок
-        self.button_width = 100
-        self.button_height = 50
+        self.button_width = 200
+        self.button_height = 100
 
         # Параметры корабля
         self.ship_limit = 3

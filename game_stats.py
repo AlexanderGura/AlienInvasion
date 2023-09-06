@@ -11,6 +11,7 @@ class GameStats():
 
         # Игра запукается в неактивном состоянии.
         self.game_active = False
+        self.settings_active = False
 
     def reset_stats(self):
         '''Инициализирует настройки, изменяющиеся в ходе игры.'''

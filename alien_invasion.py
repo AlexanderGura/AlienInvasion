@@ -5,7 +5,7 @@ from time import sleep
 from settings import Settings
 from ship import Ship
 from bullet import Bullet
-from alien import Alien
+from alien import Alien, AlienBoss
 from button import Button
 from game_stats import GameStats
 from scoreboard import Scoreboard
@@ -21,8 +21,9 @@ class AlienInvasion:
 
         # Создает окно в полноэкранном режиме и обновляет настройки
         self.screen = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
-        self.settings.screen_width = self.screen.get_rect().width
-        self.settings.screen_height = self.screen.get_rect().height
+        self.screen_rect = self.screen.get_rect()
+        self.settings.screen_width = self.screen_rect.width
+        self.settings.screen_height = self.screen_rect.height
 
         # Создание экземпляров для хранения игровой статистики и результатов.
         self.stats = GameStats(self)
@@ -31,13 +32,18 @@ class AlienInvasion:
         pygame.display.set_caption("Alien Invasion")
         self.ship = Ship(self.screen, self.settings)
         self.bullets = pygame.sprite.Group()    # Группировка всех снарядов
+
+        # Создание пришельцев, их флота и босса.
         self.aliens = pygame.sprite.Group()
+        self.boss = AlienBoss(self)
+        self.boss_active = False
         self._create_fleet()
 
+        # Загрузка картинок для игры.
         self.menu_image = pygame.image.load('images/menu.jpg')
         self.game_image = pygame.image.load('images/space.jpg')
-        self.screen_rect = self.screen.get_rect()
 
+        # Создание кнопок для главного меню.
         self.create_buttons()
 
     def run_game(self):
@@ -48,14 +54,19 @@ class AlienInvasion:
             if self.stats.game_active:
                 self.ship.update()
                 self._update_bullets()
-                self._update_aliens()
+                if self.boss_active:
+                    self._update_boss_alien()
+                else:
+                    self._update_aliens()
                 
             self._update_screen()
 
     def create_buttons(self):
         '''Создает кнопки Play, Settings, Quit.'''
+        self.buttons = pygame.sprite.Group()
+
         x, y = self.screen_rect.center
-        diff = self.settings.button_height * 2
+        diff = self.settings.button_height
         self.play_button = Button(self, "Play", x, y - diff)
         self.settings_button = Button(self, "Settings", x, y)
         self.quit_button = Button(self, "Quit", x, y + diff)
@@ -101,7 +112,7 @@ class AlienInvasion:
     def _check_setting_button(self, mouse_pos):
         '''Проверяет нажатие клавиши Settings.'''
         if self.settings_button.rect.collidepoint(mouse_pos):
-            self.screen.fill((0, 0, 0))
+            self.stats.settings_active = True
 
     def _check_quit_button(self, mouse_pos):
         '''Проверяет нажатие клавиши Quit.'''
@@ -148,21 +159,22 @@ class AlienInvasion:
         '''Создание флота вторжения.'''
         # Создание пришельца и вычисление количества пришельцев в ряду
         # Интервал между соседними пришельцами равен ширине пришельца.
-        alien = Alien(self)
-        alien_width, alien_height = alien.rect.size
-        available_space_x = self.settings.screen_width - (2 * alien_width)
-        number_aliens_x = available_space_x // (2 * alien_width)
+        if not self.boss_active:
+            alien = Alien(self)
+            alien_width, alien_height = alien.rect.size
+            available_space_x = self.settings.screen_width - (2 * alien_width)
+            number_aliens_x = available_space_x // (2 * alien_width)
 
-        # Определяет количество рядов, помещающихся на экране
-        ship_height = self.ship.rect.height
-        available_space_y = (self.settings.screen_height -
-                                (3 * alien_height + ship_height))
-        number_rows = available_space_y // (2 * alien_height)
+            # Определяет количество рядов, помещающихся на экране
+            ship_height = self.ship.rect.height
+            available_space_y = (self.settings.screen_height -
+                                    (3 * alien_height + ship_height))
+            number_rows = available_space_y // (2 * alien_height)
 
-        # Создание первого ряда пришельцев.
-        for row_number in range(number_rows):
-            for alien_number in range(number_aliens_x):
-                self._create_alien(alien_number, row_number)
+            # Создание первого ряда пришельцев.
+            for row_number in range(number_rows):
+                for alien_number in range(number_aliens_x):
+                    self._create_alien(alien_number, row_number)
 
     def _create_alien(self, alien_number, row_number):
         '''Создание пришельца и размещение его в ряду.'''
@@ -201,7 +213,7 @@ class AlienInvasion:
         # Удаление снарядов и пришельцев, участвующих в коллизиях.
         # collisions - словарь, где ключ - bullet, а значение - aliens
         collisions = pygame.sprite.groupcollide(
-            self.bullets, self.aliens, True, True)
+            self.bullets, self.aliens, False, True)
         
         # Когда кончились пришельцы - создаем новый флот и удаляем снаряды.
         if not self.aliens:
@@ -220,7 +232,9 @@ class AlienInvasion:
 
         # Увеличение уровня. 
         self.stats.level += 1
-        self.sb.prep_level()
+        if self.stats.level == 2:
+            self.boss_active = True
+        self.sb.prep_level() 
 
     def _check_aliens_bottom(self):
         '''Проверяет, добрались ли пришельцы до нижнего края экрана.'''
@@ -242,6 +256,12 @@ class AlienInvasion:
 
         # Проверить, добрались ли пришельцы до края экрана.
         self._check_aliens_bottom()
+
+    def _update_boss_alien(self):
+        '''Отвечает за обновление позиции босса пришельцев.'''
+        if self.boss.check_edges():
+            self._change_fleet_direction()
+        self.boss.update()
 
     def _ship_hit(self):
         '''Обрабатывает столкновение корабля с пришельцем.'''
@@ -273,15 +293,22 @@ class AlienInvasion:
             # Перебираем список всех спрайтов(пуль) и рисуем их на экране.
             for bullet in self.bullets.sprites():
                 bullet.draw_bullet()
-            self.aliens.draw(self.screen)
             self.sb.show_score()
+            if self.boss_active:
+                self.boss.draw()
+            else:
+                self.aliens.draw(self.screen)
 
-        # Кнопка Play отображается в том случае, если игра неактива.
-        if not self.stats.game_active:
+        # Кнопки отображаются в том случае, если
+        # Игра неактива и не вызвано меню настроек.
+        if not self.stats.game_active and not self.stats.settings_active:
             self.screen.blit(self.menu_image, self.screen_rect)
             self.play_button.draw_button()
             self.settings_button.draw_button()
             self.quit_button.draw_button()
+        # Вызывается, когда включается меню настроек.
+        elif self.stats.settings_active:
+            self.screen.fill((0, 0, 0), self.screen_rect)
 
         # Отображение последнего прорисованного экрана.
         pygame.display.flip()
