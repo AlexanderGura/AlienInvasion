@@ -36,7 +36,6 @@ class AlienInvasion:
         # Создание пришельцев, их флота и босса.
         self.aliens = pygame.sprite.Group()
         self.boss = AlienBoss(self)
-        self.boss_active = False
         self._create_fleet()
 
         # Загрузка картинок для игры.
@@ -54,7 +53,7 @@ class AlienInvasion:
             if self.stats.game_active:
                 self.ship.update()
                 self._update_bullets()
-                if self.boss_active:
+                if self.stats.boss_active:
                     self._update_boss_alien()
                 else:
                     self._update_aliens()
@@ -159,7 +158,7 @@ class AlienInvasion:
         '''Создание флота вторжения.'''
         # Создание пришельца и вычисление количества пришельцев в ряду
         # Интервал между соседними пришельцами равен ширине пришельца.
-        if not self.boss_active:
+        if not self.stats.boss_active:
             alien = Alien(self)
             alien_width, alien_height = alien.rect.size
             available_space_x = self.settings.screen_width - (2 * alien_width)
@@ -212,15 +211,22 @@ class AlienInvasion:
         '''Обработка коллизий снарядов с пришельцами.'''
         # Удаление снарядов и пришельцев, участвующих в коллизиях.
         # collisions - словарь, где ключ - bullet, а значение - aliens
-        collisions = pygame.sprite.groupcollide(
-            self.bullets, self.aliens, False, True)
-        
+        aliens_collisions, boss_collision = False, False
+        if not self.stats.boss_active:
+            aliens_collisions = pygame.sprite.groupcollide(
+                self.bullets, self.aliens, False, True)
+        else:
+            boss_collision = pygame.sprite.spritecollideany(self.boss, self.bullets)
+            if boss_collision:
+                self.stats.boss_active = False
+                self.stats.game_active = False
+
         # Когда кончились пришельцы - создаем новый флот и удаляем снаряды.
         if not self.aliens:
             self.start_new_level()
 
-        if collisions:
-            for aliens in collisions.values():
+        if aliens_collisions:
+            for aliens in aliens_collisions.values():
                 self.stats.score += self.settings.alien_points * len(aliens)
             self.sb.prep_score()
             self.sb.check_high_score()
@@ -232,8 +238,8 @@ class AlienInvasion:
 
         # Увеличение уровня. 
         self.stats.level += 1
-        if self.stats.level == 2:
-            self.boss_active = True
+        if self.stats.level == 20:
+            self.stats.boss_active = True
         self.sb.prep_level() 
 
     def _check_aliens_bottom(self):
@@ -294,7 +300,7 @@ class AlienInvasion:
             for bullet in self.bullets.sprites():
                 bullet.draw_bullet()
             self.sb.show_score()
-            if self.boss_active:
+            if self.stats.boss_active:
                 self.boss.draw()
             else:
                 self.aliens.draw(self.screen)
@@ -316,4 +322,3 @@ class AlienInvasion:
 if __name__ == '__main__':
     ai = AlienInvasion()
     ai.run_game()
-    sys.pause()
