@@ -101,7 +101,7 @@ class AlienInvasion:
     def _check_setting_button(self, mouse_pos):
         '''Проверяет нажатие клавиши Settings.'''
         if self.settings_button.rect.collidepoint(mouse_pos):
-            print('lol')
+            self.screen.fill((0, 0, 0))
 
     def _check_quit_button(self, mouse_pos):
         '''Проверяет нажатие клавиши Quit.'''
@@ -120,6 +120,9 @@ class AlienInvasion:
             self.ship.moving_down = True
         elif event.key == pygame.K_SPACE:
             self._fire_bullet()
+        elif event.key == pygame.K_ESCAPE:
+            self.stats.game_active = False
+            pygame.mouse.set_visible(True)
         elif event.key == pygame.K_q:
             sys.exit()
 
@@ -286,3 +289,4 @@ class AlienInvasion:
 if __name__ == '__main__':
     ai = AlienInvasion()
     ai.run_game()
+    sys.pause()

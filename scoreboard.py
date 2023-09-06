@@ -16,7 +16,7 @@ class Scoreboard():
 
         # Настройки шрифта для вывода счёта.
         self.font_color = (255, 255, 255)
-        self.font = pygame.font.SysFont(None, 48)
+        self.font = pygame.font.SysFont("Algerian", 48)
 
         # Подготовка изображений счётов.
         self.prep_images()

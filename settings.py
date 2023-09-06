@@ -14,7 +14,7 @@ class Settings():
         self.ship_limit = 3
 
         # Параметры пришельцев
-        self.alien_drop_speed = 30
+        self.alien_drop_speed = 10
 
         # Параметры снаряда
         self.bullet_allowed = 3
