@@ -214,7 +214,7 @@ class AlienInvasion:
         aliens_collisions, boss_collision = False, False
         if not self.stats.boss_active:
             aliens_collisions = pygame.sprite.groupcollide(
-                self.bullets, self.aliens, False, True)
+                self.bullets, self.aliens, True, True)
         else:
             boss_collision = pygame.sprite.spritecollideany(self.boss, self.bullets)
             if boss_collision:

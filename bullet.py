@@ -31,4 +31,4 @@ class Bullet(Sprite):
 
     def draw_bullet(self):
         '''Вывод снаряда на экран.'''
-        self.screen.fill((0, 0, 0), self.rect)
+        self.screen.blit(self.image, self.rect)
